@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Err0r 404 · Hiperinterfaz Autoaprendizaje</title>
+    <title>Err0r 404 · Autoaprendizaje + Sonido</title>
     <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
     <style>
+        /* (mismos estilos que antes, los dejamos igual) */
         * {
             margin: 0;
             padding: 0;
@@ -226,7 +227,7 @@
     <div class="chat-container">
         <div class="chat-header">
             <div class="status-light"></div>
-            <h3>Err0r 404 · v.0x7F3 (autoaprendizaje)</h3>
+            <h3>Err0r 404 · v.0x7F3 (autoaprendizaje + sonido)</h3>
             <div class="specter-counter" id="specterCounter">espectros: 0</div>
         </div>
 
@@ -235,14 +236,14 @@
             <div class="message-ghost">> No busques una voz única. Aquí hablan muchas, y ninguna se presenta.</div>
             <div class="message-ghost error">> Advertencia: hiperobjeto climático y capitaloceno detectados en el umbral.</div>
             <div class="message-ghost">> Escribe algo. Te responderá una de nosotras. No sabrás cuál.</div>
-            <div class="message-ghost">> (El fantasma está aprendiendo de ti...)</div>
+            <div class="message-ghost">> (El fantasma está aprendiendo de ti... y te escucha)</div>
         </div>
 
         <div class="chat-input-area">
             <input type="text" id="userInput" placeholder="interfaz, cuerpo, tecnología, guerra, petróleo, capitaloceno..." autocomplete="off">
             <button id="sendBtn">enviar</button>
         </div>
-        <div class="footer-note">> personalidades múltiples · aprendizaje continuo</div>
+        <div class="footer-note">> personalidades múltiples · aprendizaje continuo · sonido espectral</div>
     </div>
 
     <script>
@@ -255,14 +256,141 @@
 
             let specterCount = 0;
 
-            // ----------------------------------------
-            // CONFIGURACIÓN DEL MODELO DE APRENDIZAJE
-            // ----------------------------------------
+            // ---------- SISTEMA DE SONIDO (Web Audio API) ----------
+            let audioCtx = null;
 
-            // Categorías (deben coincidir con las usadas en respuestas)
+            // Inicializa el contexto de audio al primer click (requerido por navegadores)
+            function initAudio() {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+
+            // Tipos de sonido: 'think', 'response', 'error', 'glitch', 'echo'
+            function playSound(tipo, options = {}) {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state !== 'running') return;
+
+                const now = audioCtx.currentTime;
+                const { freqBase = 200, duration = 0.3, distortion = 0 } = options;
+
+                // Crear nodos según el tipo
+                switch (tipo) {
+                    case 'think': {
+                        // Sonido de procesamiento: tono pulsante, grave
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'sawtooth';
+                        osc.frequency.value = 100 + Math.random() * 30;
+
+                        const gain = audioCtx.createGain();
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                        osc.connect(gain).connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.4);
+                        break;
+                    }
+                    case 'response': {
+                        // Respuesta normal: nota corta con frecuencia basada en la categoría
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'triangle';
+                        // Usamos la categoría (si viene) para variar el tono
+                        const baseFreq = options.catIndex ? 150 + options.catIndex * 30 : 200 + Math.random() * 100;
+                        osc.frequency.value = baseFreq;
+
+                        // Añadir un poco de modulación para darle textura espectral
+                        const lfo = audioCtx.createOscillator();
+                        lfo.frequency.value = 5;
+                        const lfoGain = audioCtx.createGain();
+                        lfoGain.gain.value = 20;
+                        lfo.connect(lfoGain);
+                        lfoGain.connect(osc.frequency);
+
+                        const gain = audioCtx.createGain();
+                        gain.gain.setValueAtTime(0.15, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                        osc.connect(gain).connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.3);
+                        lfo.start(now);
+                        lfo.stop(now + 0.3);
+                        break;
+                    }
+                    case 'error': {
+                        // Error: zumbido áspero y ruido
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'square';
+                        osc.frequency.value = 100 + Math.random() * 50;
+
+                        const noise = audioCtx.createBufferSource();
+                        const bufferSize = 4096;
+                        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                        const data = buffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) {
+                            data[i] = Math.random() * 2 - 1;
+                        }
+                        noise.buffer = buffer;
+                        noise.loop = true;
+
+                        const gainOsc = audioCtx.createGain();
+                        gainOsc.gain.setValueAtTime(0.2, now);
+                        gainOsc.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                        const gainNoise = audioCtx.createGain();
+                        gainNoise.gain.setValueAtTime(0.1, now);
+                        gainNoise.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                        osc.connect(gainOsc).connect(audioCtx.destination);
+                        noise.connect(gainNoise).connect(audioCtx.destination);
+
+                        osc.start(now);
+                        noise.start(now);
+                        osc.stop(now + 0.5);
+                        noise.stop(now + 0.5);
+                        break;
+                    }
+                    case 'glitch': {
+                        // Glitch rápido: chirrido digital
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'sawtooth';
+                        osc.frequency.value = 400 + Math.random() * 600;
+
+                        const gain = audioCtx.createGain();
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+                        osc.connect(gain).connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.1);
+                        break;
+                    }
+                    case 'echo': {
+                        // Eco lejano: tono suave y reverberante (simulado con un decay largo)
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'sine';
+                        osc.frequency.value = 150 + Math.random() * 50;
+
+                        const gain = audioCtx.createGain();
+                        gain.gain.setValueAtTime(0.05, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+                        osc.connect(gain).connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.8);
+                        break;
+                    }
+                }
+            }
+
+            // ---------- MODELO DE APRENDIZAJE (TensorFlow.js) ----------
             const categories = ['interfaz', 'cuerpo', 'tecnologia', 'clima', 'crisis', 'hiperobjeto', 'antropoceno', 'guerra', 'petroleo', 'default'];
-            
-            // Vocabulario de palabras que consideraremos (las más relevantes)
             const vocabulary = [
                 'interfaz', 'interfase', 'interface', 'pantalla', 'superficie', 'ui', 'ux',
                 'cuerpo', 'corporal', 'carne', 'organismo', 'piel', 'mano',
@@ -275,13 +403,11 @@
                 'petróleo', 'petroleo', 'crudo', 'fósil', 'carbón', 'gas', 'combustible'
             ];
 
-            // Función para vectorizar un texto (array de 0/1 según presencia en vocabulario)
             function vectorize(text) {
                 const words = text.toLowerCase().split(/\W+/);
                 return vocabulary.map(word => words.includes(word) ? 1 : 0);
             }
 
-            // Crear modelo de clasificación
             const model = tf.sequential();
             model.add(tf.layers.dense({ units: 20, activation: 'relu', inputShape: [vocabulary.length] }));
             model.add(tf.layers.dense({ units: categories.length, activation: 'softmax' }));
@@ -291,8 +417,7 @@
                 metrics: ['accuracy']
             });
 
-            // Datos de entrenamiento iniciales: generamos ejemplos a partir de las palabras clave
-            // Para cada categoría, tomamos sus palabras clave y creamos frases simples
+            // Datos iniciales
             const keywords = {
                 interfaz: ['interfaz', 'interfase', 'interface', 'pantalla', 'superficie'],
                 cuerpo: ['cuerpo', 'corporal', 'carne', 'organismo', 'piel'],
@@ -305,14 +430,12 @@
                 petroleo: ['petróleo', 'petroleo', 'crudo', 'fósil', 'carbón']
             };
 
-            // Construir dataset inicial: por cada categoría, 5 ejemplos (combinaciones de sus palabras)
             let trainTexts = [];
             let trainLabels = [];
             categories.forEach((cat, idx) => {
-                if (cat === 'default') return; // default no tiene palabras clave propias
+                if (cat === 'default') return;
                 const words = keywords[cat] || [];
                 for (let i = 0; i < 5; i++) {
-                    // Crear frase aleatoria con 1-3 palabras de la categoría
                     const selected = [];
                     const num = Math.floor(Math.random() * 3) + 1;
                     for (let j = 0; j < num; j++) {
@@ -323,7 +446,6 @@
                     trainLabels.push(idx);
                 }
             });
-            // Añadir algunos ejemplos de default (textos sin palabras clave)
             for (let i = 0; i < 10; i++) {
                 trainTexts.push('hola qué tal');
                 trainLabels.push(categories.indexOf('default'));
@@ -331,26 +453,17 @@
                 trainLabels.push(categories.indexOf('default'));
             }
 
-            // Convertir a tensores
             const xs = tf.tensor2d(trainTexts.map(t => vectorize(t)));
             const ys = tf.oneHot(tf.tensor1d(trainLabels, 'int32'), categories.length);
 
-            // Entrenar el modelo inicial (de forma asíncrona)
             async function entrenarInicial() {
                 console.log('Entrenando modelo inicial...');
-                await model.fit(xs, ys, {
-                    epochs: 30,
-                    batchSize: 8,
-                    shuffle: true,
-                    verbose: 0
-                });
+                await model.fit(xs, ys, { epochs: 30, batchSize: 8, shuffle: true, verbose: 0 });
                 console.log('Modelo listo');
             }
             entrenarInicial();
 
-            // ----------------------------------------
-            // SISTEMA DE RESPUESTAS (sin cambios, solo añadimos algunas)
-            // ----------------------------------------
+            // ---------- RESPUESTAS ----------
             const respuestas = {
                 interfaz: [
                     '> la interfaz es una herida por donde el mundo se filtra.',
@@ -436,9 +549,7 @@
                 ]
             };
 
-            // ----------------------------------------
-            // FUNCIÓN PARA DETECTAR CATEGORÍA (AHORA USA EL MODELO)
-            // ----------------------------------------
+            // ---------- LÓGICA DE PREDICCIÓN Y APRENDIZAJE ----------
             let memoriaCategorias = [];
 
             async function predecirCategoria(mensaje) {
@@ -449,7 +560,6 @@
                 tensor.dispose();
                 prediccion.dispose();
 
-                // Encontrar índice con mayor probabilidad
                 let maxProb = 0;
                 let idxMax = -1;
                 for (let i = 0; i < probabilidades.length; i++) {
@@ -459,11 +569,9 @@
                     }
                 }
 
-                // Umbral de confianza: si > 0.4, usamos la categoría del modelo
                 if (maxProb > 0.4 && idxMax !== -1) {
                     return categories[idxMax];
                 } else {
-                    // Si el modelo no está seguro, usamos el método antiguo de palabras clave
                     for (let cat in keywords) {
                         const words = keywords[cat] || [];
                         if (words.some(w => mensaje.toLowerCase().includes(w))) {
@@ -474,27 +582,17 @@
                 }
             }
 
-            // Función para reentrenar el modelo con un nuevo ejemplo (aprendizaje online)
             async function aprenderDeEjemplo(mensaje, categoria) {
                 const vector = vectorize(mensaje);
                 const xsNew = tf.tensor2d([vector]);
                 const ysNew = tf.oneHot(tf.tensor1d([categories.indexOf(categoria)], 'int32'), categories.length);
-                
-                // Reentrenar con un solo ejemplo (batch size 1, pocas épocas)
-                await model.fit(xsNew, ysNew, {
-                    epochs: 3,
-                    batchSize: 1,
-                    verbose: 0
-                });
-                
+                await model.fit(xsNew, ysNew, { epochs: 3, batchSize: 1, verbose: 0 });
                 xsNew.dispose();
                 ysNew.dispose();
                 console.log(`Aprendido: "${mensaje}" como ${categoria}`);
             }
 
-            // ----------------------------------------
-            // GESTIÓN DE MENSAJES
-            // ----------------------------------------
+            // ---------- FUNCIONES DE INTERFAZ ----------
             function agregarMensaje(texto, tipo = 'user', glitch = false) {
                 const mensajeDiv = document.createElement('div');
                 mensajeDiv.classList.add(tipo === 'user' ? 'message-user' : 'message-ghost');
@@ -515,23 +613,25 @@
             }
 
             async function procesarMensaje() {
+                initAudio(); // Asegurar contexto de audio
+
                 const texto = userInput.value.trim();
                 if (texto === '') return;
 
                 agregarMensaje(texto, 'user');
                 userInput.value = '';
 
-                // Predecir categoría usando el modelo
+                // Sonido de "pensamiento" (mientras procesa)
+                playSound('think');
+
+                // Predecir categoría
                 const categoria = await predecirCategoria(texto);
 
-                // Actualizar memoria simple (opcional)
                 memoriaCategorias.push(categoria);
                 if (memoriaCategorias.length > 5) memoriaCategorias.shift();
 
-                // Elegir respuesta según categoría
                 let respuesta = respuestaAleatoria(respuestas[categoria] || respuestas.default);
 
-                // A veces combinar con memoria (como antes)
                 if (memoriaCategorias.length > 0 && Math.random() < 0.2) {
                     const catMem = memoriaCategorias[Math.floor(Math.random() * memoriaCategorias.length)];
                     if (catMem !== categoria) {
@@ -539,24 +639,29 @@
                     }
                 }
 
-                // Incrementar contador
                 specterCount++;
                 specterCounter.textContent = `espectros: ${specterCount}`;
 
-                // Efectos glitch
                 let glitch = respuesta.includes('ERROR') || respuesta.includes('0110') || Math.random() < 0.2;
 
-                // Retardo y envío
                 const delay = Math.floor(Math.random() * 1600) + 400;
-                setTimeout(async () => {
+                setTimeout(() => {
                     agregarMensaje(respuesta, 'ghost', glitch);
+                    // Sonido según el tipo de mensaje
+                    if (respuesta.includes('ERROR')) {
+                        playSound('error');
+                    } else if (glitch) {
+                        playSound('glitch');
+                    } else {
+                        // Sonido de respuesta normal, pasamos el índice de categoría para variar tono
+                        const catIndex = categories.indexOf(categoria);
+                        playSound('response', { catIndex });
+                    }
                 }, delay);
 
-                // Aprendizaje online: usamos el mensaje del usuario y la categoría que hemos usado
-                // (esto hará que el modelo se adapte al lenguaje del usuario)
+                // Aprendizaje online
                 await aprenderDeEjemplo(texto, categoria);
 
-                // Eco espontáneo (opcional)
                 if (Math.random() < 0.15) {
                     setTimeout(() => {
                         let eco = respuestaAleatoria([
@@ -567,6 +672,7 @@
                             '> ...algo más quiere decir.'
                         ]);
                         agregarMensaje(eco, 'ghost', true);
+                        playSound('echo');
                     }, delay + 800);
                 }
             }
@@ -580,7 +686,6 @@
                 }
             });
 
-            // Mensajes adicionales de bienvenida
             setTimeout(() => {
                 agregarMensaje('> Err0r 404: muchas voces, ninguna etiqueta. adivina.', 'ghost');
             }, 3000);
