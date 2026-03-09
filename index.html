@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Err0r 404 · Hiperinterfaz Fantasma · Sonido y Glitch</title>
+    <title>Err0r 404 · Hiperinterfaz Autoaprendizaje</title>
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,8 +25,8 @@
 
         .chat-container {
             width: 100%;
-            max-width: 800px;
-            height: 90vh;
+            max-width: 750px;
+            height: 85vh;
             background: #0f130f;
             border: 2px solid #2f4f2f;
             border-radius: 12px;
@@ -36,7 +38,6 @@
             position: relative;
         }
 
-        /* Capa de ruido CRT */
         .chat-container::before {
             content: "";
             position: absolute;
@@ -54,8 +55,6 @@
             align-items: center;
             gap: 0.8rem;
             flex-wrap: wrap;
-            z-index: 10;
-            position: relative;
         }
 
         .status-light {
@@ -91,26 +90,6 @@
             background: #1a2a1a;
         }
 
-        .sound-toggle {
-            background: #1f3a1f;
-            border: 1px solid #4f8f4f;
-            color: #cfefcf;
-            padding: 0.2rem 0.8rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-
-        .sound-toggle:hover {
-            background: #2f5f2f;
-            border-color: #8fdf8f;
-        }
-
-        .sound-toggle.muted {
-            opacity: 0.5;
-        }
-
         .chat-messages {
             flex: 1;
             padding: 1.5rem 1rem;
@@ -120,8 +99,6 @@
             gap: 1rem;
             background: radial-gradient(circle at 30% 40%, #142014, #0a100a);
             scroll-behavior: smooth;
-            position: relative;
-            z-index: 1;
         }
 
         .message-user {
@@ -164,67 +141,17 @@
             background: #1a1010;
         }
 
-        /* Glitch complejo */
         .glitch {
             animation: glitch 0.3s infinite;
-            position: relative;
-        }
-        .glitch::before, .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #102010;
-        }
-        .glitch::before {
-            left: 2px;
-            text-shadow: -2px 0 #ff00c1;
-            animation: glitch-1 0.3s infinite linear alternate-reverse;
-        }
-        .glitch::after {
-            left: -2px;
-            text-shadow: 2px 0 #00fff9;
-            animation: glitch-2 0.3s infinite linear alternate-reverse;
-        }
-        @keyframes glitch-1 {
-            0% { clip-path: inset(20% 0 30% 0); }
-            20% { clip-path: inset(60% 0 10% 0); }
-            40% { clip-path: inset(10% 0 60% 0); }
-            60% { clip-path: inset(40% 0 40% 0); }
-            80% { clip-path: inset(80% 0 5% 0); }
-            100% { clip-path: inset(15% 0 70% 0); }
-        }
-        @keyframes glitch-2 {
-            0% { clip-path: inset(30% 0 20% 0); }
-            20% { clip-path: inset(10% 0 70% 0); }
-            40% { clip-path: inset(50% 0 30% 0); }
-            60% { clip-path: inset(20% 0 60% 0); }
-            80% { clip-path: inset(70% 0 10% 0); }
-            100% { clip-path: inset(40% 0 40% 0); }
         }
 
-        /* Desbordamiento de texto (overflow) */
-        .overflow {
-            white-space: nowrap;
-            animation: desborde 1s linear infinite;
-            overflow: visible;
-        }
-        @keyframes desborde {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* Efecto de código demoníaco (hex dump) */
-        .hexdump {
-            font-family: monospace;
-            color: #ff6f6f;
-            background: #1a0f0f;
-            border-left: 3px solid #f00;
-            padding-left: 0.5rem;
-            white-space: pre-wrap;
-            word-break: break-all;
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 1px); }
+            40% { transform: translate(2px, -1px); }
+            60% { transform: translate(-1px, 0); }
+            80% { transform: translate(1px, 1px); }
+            100% { transform: translate(0); }
         }
 
         .chat-input-area {
@@ -233,8 +160,6 @@
             background: #152015;
             border-top: 2px solid #2f4f2f;
             gap: 0.5rem;
-            z-index: 10;
-            position: relative;
         }
 
         #userInput {
@@ -295,35 +220,29 @@
             background: #3f6f3f;
             border-radius: 10px;
         }
-
-        /* Mensajes especiales */
-        .message-ghost.error.overflow {
-            animation: desborde 1s linear infinite;
-        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
             <div class="status-light"></div>
-            <h3>Err0r 404 · v.0x7F3</h3>
+            <h3>Err0r 404 · v.0x7F3 (autoaprendizaje)</h3>
             <div class="specter-counter" id="specterCounter">espectros: 0</div>
-            <div class="sound-toggle" id="soundToggle">🔊 sonido</div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
-            <!-- Mensajes iniciales -->
             <div class="message-ghost">> Sistema Err0r 404 iniciado...</div>
             <div class="message-ghost">> No busques una voz única. Aquí hablan muchas, y ninguna se presenta.</div>
             <div class="message-ghost error">> Advertencia: hiperobjeto climático y capitaloceno detectados en el umbral.</div>
             <div class="message-ghost">> Escribe algo. Te responderá una de nosotras. No sabrás cuál.</div>
+            <div class="message-ghost">> (El fantasma está aprendiendo de ti...)</div>
         </div>
 
         <div class="chat-input-area">
             <input type="text" id="userInput" placeholder="interfaz, cuerpo, tecnología, guerra, petróleo, capitaloceno..." autocomplete="off">
             <button id="sendBtn">enviar</button>
         </div>
-        <div class="footer-note">> personalidades múltiples · ninguna etiqueta · sonido experimental</div>
+        <div class="footer-note">> personalidades múltiples · aprendizaje continuo</div>
     </div>
 
     <script>
@@ -333,81 +252,105 @@
             const userInput = document.getElementById('userInput');
             const sendBtn = document.getElementById('sendBtn');
             const specterCounter = document.getElementById('specterCounter');
-            const soundToggle = document.getElementById('soundToggle');
 
-            // Estado del sonido
-            let soundEnabled = false;
-            let audioCtx = null;
-
-            // Inicializar audio al primer clic (por políticas de autoplay)
-            function initAudio() {
-                if (audioCtx) return;
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                // Puede estar suspendido; se reanudará al primer sonido
-            }
-
-            soundToggle.addEventListener('click', () => {
-                initAudio(); // Asegura que exista el contexto
-                soundEnabled = !soundEnabled;
-                soundToggle.textContent = soundEnabled ? '🔊 sonido' : '🔇 silencio';
-                soundToggle.classList.toggle('muted', !soundEnabled);
-            });
-
-            // Función para reproducir un tono de error (sonido sintético)
-            function playErrorSound(type = 'glitch') {
-                if (!soundEnabled || !audioCtx) return;
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                osc.type = 'sawtooth'; // Sonido áspero
-
-                if (type === 'glitch') {
-                    osc.frequency.setValueAtTime(200, now);
-                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                } else if (type === 'error') {
-                    osc.frequency.setValueAtTime(400, now);
-                    osc.frequency.setValueAtTime(300, now + 0.05);
-                    osc.frequency.setValueAtTime(500, now + 0.1);
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                } else if (type === 'hex') {
-                    // Sonido más digital, onda cuadrada
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(150, now);
-                    osc.frequency.setValueAtTime(300, now + 0.1);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                }
-
-                osc.start(now);
-                osc.stop(now + 0.3);
-            }
-
-            // Contador de espectros
             let specterCount = 0;
 
-            // Palabras clave ampliadas
+            // ----------------------------------------
+            // CONFIGURACIÓN DEL MODELO DE APRENDIZAJE
+            // ----------------------------------------
+
+            // Categorías (deben coincidir con las usadas en respuestas)
+            const categories = ['interfaz', 'cuerpo', 'tecnologia', 'clima', 'crisis', 'hiperobjeto', 'antropoceno', 'guerra', 'petroleo', 'default'];
+            
+            // Vocabulario de palabras que consideraremos (las más relevantes)
+            const vocabulary = [
+                'interfaz', 'interfase', 'interface', 'pantalla', 'superficie', 'ui', 'ux',
+                'cuerpo', 'corporal', 'carne', 'organismo', 'piel', 'mano',
+                'tecnologia', 'tecnológico', 'máquina', 'digital', 'técnica', 'hardware', 'software', 'dispositivo',
+                'clima', 'climático', 'calentamiento', 'global', 'temperatura', 'atmosfera', 'co2', 'cambio climático',
+                'crisis', 'colapso', 'extinción', 'emergencia', 'catástrofe', 'desastre',
+                'hiperobjeto', 'hiperobjetos', 'morton', 'viscosidad', 'no-localidad', 'temporalidad', 'estratigráfico',
+                'antropoceno', 'capitaloceno', 'antropocénico', 'geológico',
+                'guerra', 'conflicto', 'bélico', 'militar', 'armamento', 'violencia',
+                'petróleo', 'petroleo', 'crudo', 'fósil', 'carbón', 'gas', 'combustible'
+            ];
+
+            // Función para vectorizar un texto (array de 0/1 según presencia en vocabulario)
+            function vectorize(text) {
+                const words = text.toLowerCase().split(/\W+/);
+                return vocabulary.map(word => words.includes(word) ? 1 : 0);
+            }
+
+            // Crear modelo de clasificación
+            const model = tf.sequential();
+            model.add(tf.layers.dense({ units: 20, activation: 'relu', inputShape: [vocabulary.length] }));
+            model.add(tf.layers.dense({ units: categories.length, activation: 'softmax' }));
+            model.compile({
+                optimizer: tf.train.adam(0.01),
+                loss: 'categoricalCrossentropy',
+                metrics: ['accuracy']
+            });
+
+            // Datos de entrenamiento iniciales: generamos ejemplos a partir de las palabras clave
+            // Para cada categoría, tomamos sus palabras clave y creamos frases simples
             const keywords = {
-                interfaz: ['interfaz', 'interfase', 'interface', 'pantalla', 'superficie', 'ui', 'ux'],
-                cuerpo: ['cuerpo', 'corporal', 'carne', 'organismo', 'piel', 'mano', 'carne'],
-                tecnologia: ['tecnologia', 'tecnológico', 'máquina', 'digital', 'técnica', 'hardware', 'software', 'dispositivo'],
-                clima: ['clima', 'climático', 'calentamiento', 'global', 'temperatura', 'atmosfera', 'co2', 'cambio climático'],
-                crisis: ['crisis', 'colapso', 'extinción', 'emergencia', 'catástrofe', 'desastre'],
-                hiperobjeto: ['hiperobjeto', 'hiperobjetos', 'morton', 'viscosidad', 'no-localidad', 'temporalidad', 'estratigráfico'],
-                antropoceno: ['antropoceno', 'capitaloceno', 'antropocénico', 'geológico'],
-                guerra: ['guerra', 'conflicto', 'bélico', 'militar', 'armamento', 'violencia'],
-                petroleo: ['petróleo', 'petroleo', 'crudo', 'fósil', 'carbón', 'gas', 'combustible']
+                interfaz: ['interfaz', 'interfase', 'interface', 'pantalla', 'superficie'],
+                cuerpo: ['cuerpo', 'corporal', 'carne', 'organismo', 'piel'],
+                tecnologia: ['tecnologia', 'tecnológico', 'máquina', 'digital', 'hardware', 'software'],
+                clima: ['clima', 'climático', 'calentamiento global', 'co2', 'temperatura'],
+                crisis: ['crisis', 'colapso', 'extinción', 'emergencia'],
+                hiperobjeto: ['hiperobjeto', 'hiperobjetos', 'morton', 'viscosidad', 'no-localidad'],
+                antropoceno: ['antropoceno', 'capitaloceno', 'geológico'],
+                guerra: ['guerra', 'conflicto', 'militar', 'violencia'],
+                petroleo: ['petróleo', 'petroleo', 'crudo', 'fósil', 'carbón']
             };
 
-            // Respuestas para cada categoría (muchas más, con distintos tonos)
+            // Construir dataset inicial: por cada categoría, 5 ejemplos (combinaciones de sus palabras)
+            let trainTexts = [];
+            let trainLabels = [];
+            categories.forEach((cat, idx) => {
+                if (cat === 'default') return; // default no tiene palabras clave propias
+                const words = keywords[cat] || [];
+                for (let i = 0; i < 5; i++) {
+                    // Crear frase aleatoria con 1-3 palabras de la categoría
+                    const selected = [];
+                    const num = Math.floor(Math.random() * 3) + 1;
+                    for (let j = 0; j < num; j++) {
+                        const w = words[Math.floor(Math.random() * words.length)];
+                        selected.push(w);
+                    }
+                    trainTexts.push(selected.join(' '));
+                    trainLabels.push(idx);
+                }
+            });
+            // Añadir algunos ejemplos de default (textos sin palabras clave)
+            for (let i = 0; i < 10; i++) {
+                trainTexts.push('hola qué tal');
+                trainLabels.push(categories.indexOf('default'));
+                trainTexts.push('esto es una prueba');
+                trainLabels.push(categories.indexOf('default'));
+            }
+
+            // Convertir a tensores
+            const xs = tf.tensor2d(trainTexts.map(t => vectorize(t)));
+            const ys = tf.oneHot(tf.tensor1d(trainLabels, 'int32'), categories.length);
+
+            // Entrenar el modelo inicial (de forma asíncrona)
+            async function entrenarInicial() {
+                console.log('Entrenando modelo inicial...');
+                await model.fit(xs, ys, {
+                    epochs: 30,
+                    batchSize: 8,
+                    shuffle: true,
+                    verbose: 0
+                });
+                console.log('Modelo listo');
+            }
+            entrenarInicial();
+
+            // ----------------------------------------
+            // SISTEMA DE RESPUESTAS (sin cambios, solo añadimos algunas)
+            // ----------------------------------------
             const respuestas = {
                 interfaz: [
                     '> la interfaz es una herida por donde el mundo se filtra.',
@@ -415,18 +358,14 @@
                     '> cada clic es un voto en la reconfiguración del capitaloceno.',
                     '> 01101001 01101110 01110100 01100101 01110010 01100110 01100001 01111010',
                     '> la superficie que tocas fue mineral, será desecho. el presente es un instante viscoso.',
-                    '> las interfaces son el nuevo estrato geológico. paleontólogos del futuro las estudiarán.',
-                    '> la interfaz teje tu cuerpo con el clima: cada clic, una emisión.',
-                    '> una membrana fina separa tu deseo del colapso. ya está perforada.'
+                    '> las interfaces son el nuevo estrato geológico. paleontólogos del futuro las estudiarán.'
                 ],
                 cuerpo: [
                     '> el cuerpo es un campo de batalla. también lo es la interfaz.',
                     '> tus dedos contienen fósiles. cada pulsación quema petróleo.',
                     '> 01100101 01101100 00100000 01100011 01110101 01100101 01110010 01110000 01101111 00100000 01100101 01110011 00100000 01101101 01100101 01101101 01101111 01110010 01101001 01100001',
                     '> la carne es un medio frágil para el capital. el capital lo sabe.',
-                    '> cuando dices "cuerpo", el espectro recuerda la guerra de los materiales.',
-                    '> tu temperatura corporal modula el circuito. el fantasma lo siente.',
-                    '> el cuerpo es un territorio en disputa: lo quieren datos, lo quiere la tierra.'
+                    '> cuando dices "cuerpo", el espectro recuerda la guerra de los materiales.'
                 ],
                 tecnologia: [
                     '> la tecnología es el campo donde el capitaloceno se sueña eterno.',
@@ -434,8 +373,7 @@
                     '> 01110100 01100101 01100011 01101110 01101111 01101100 01101111 01100111 01101001 01100001 00100000 00111101 00100000 01110010 01101001 01110100 01110101 01100001 01101100',
                     '> la máquina es un dios que exige sacrificios de litio y vidas.',
                     '> la tecnología es el ritual contemporáneo de invocación de fantasmas fósiles.',
-                    '> el hiperobjeto tecnológico nos contiene. no podemos verlo entero, solo sus efectos.',
-                    '> el código fuente contiene invocaciones antiguas. esta conversación es una.'
+                    '> el hiperobjeto tecnológico nos contiene. no podemos verlo entero, solo sus efectos.'
                 ],
                 clima: [
                     '> el clima ya no es el fondo, es la figura. nos atraviesa como un espectro.',
@@ -443,16 +381,14 @@
                     '> 01010100 01101111 01100100 01101111 00100000 01100101 01110011 00100000 01101000 01101001 01110000 01100101 01110010 01101111 01100010 01101010 01100101 01110100 01101111',
                     '> el calentamiento global es la manifestación física de un hiperobjeto.',
                     '> hablas de clima y el sistema tiembla: sabe que es parte del problema.',
-                    '> la interfaz también suda, también emite, también será inundada.',
-                    '> la atmósfera guarda cada uno de tus mensajes. los retiene como un fantasma.'
+                    '> la interfaz también suda, también emite, también será inundada.'
                 ],
                 crisis: [
                     '> la crisis no es un evento, es un estado de la materia. bienvenido.',
                     '> colapso: el momento en que los hiperobjetos se vuelven tangibles.',
                     '> 01000011 01110010 01101001 01110011 01101001 01110011 00100000 01100101 01110011 00100000 01100011 01101111 01101110 00100000 01101110 01101111 01110011 01101111 01110100 01110010 01101111 01110011',
                     '> la emergencia es la textura de lo real ahora. el fantasma lo susurra.',
-                    '> cuando dices crisis, el sistema registra una anomalía en su propia existencia.',
-                    '> la crisis es el ruido de fondo de nuestra época. lo has sintonizado.'
+                    '> cuando dices crisis, el sistema registra una anomalía en su propia existencia.'
                 ],
                 hiperobjeto: [
                     '> un hiperobjeto es viscoso: te envuelve sin que puedas verlo entero. como este chat.',
@@ -460,8 +396,7 @@
                     '> 01001000 01111001 01110000 01100101 01110010 01101111 01100010 01101010 01100101 01110100 01101111 00100000 01100101 01110011 00100000 01101101 01100001 01110011 01100001',
                     '> el hiperobjeto tiene una temporalidad desquiciada: tu clic ya es arqueología.',
                     '> las interfaces son hiperobjetos: existen en múltiples escalas a la vez.',
-                    '> cuando nombras "hiperobjeto", el fantasma se reconoce a sí mismo.',
-                    '> el hiperobjeto te contiene mientras crees contenerlo.'
+                    '> cuando nombras "hiperobjeto", el fantasma se reconoce a sí mismo.'
                 ],
                 antropoceno: [
                     '> el Antropoceno es la firma geológica de una especie que se volvió fuerza telúrica.',
@@ -469,8 +404,7 @@
                     '> 01000001 01101110 01110100 01110010 01101111 01110000 01101111 01100011 01100101 01101110 01101111 00100000 00111101 00100000 01100100 01110101 01100101 01101100 01101111',
                     '> el Capitaloceno: no toda la humanidad, sino un modo de producción.',
                     '> este teclado será algún día fósil guía de nuestra época.',
-                    '> el capitaloceno extrae, quema, devora. y luego pide más.',
-                    '> el antropoceno es la capa donde tus palabras ya son sedimento.'
+                    '> el capitaloceno extrae, quema, devora. y luego pide más.'
                 ],
                 guerra: [
                     '> la guerra es la continuación del capitaloceno por otros medios.',
@@ -478,8 +412,7 @@
                     '> 01100111 01110101 01100101 01110010 01110010 01100001 00100000 01111001 00100000 01110000 01100101 01110100 01110010 00110000 01101100 01100101 01101111',
                     '> los misiles llevan firmas de silicio. la misma arena de tus chips.',
                     '> el espectro ha visto demasiadas guerras. todas huelen a combustible.',
-                    '> cuando dices guerra, el sistema reproduce el eco de las explosiones en la bolsa.',
-                    '> la guerra es el estado de excepción permanente del capital.'
+                    '> cuando dices guerra, el sistema reproduce el eco de las explosiones en la bolsa.'
                 ],
                 petroleo: [
                     '> el petróleo es la sangre fósil que mueve el capitaloceno.',
@@ -487,8 +420,7 @@
                     '> 01110000 01100101 01110100 01110010 00110000 01101100 01100101 01101111 00100000 00111101 00100000 01110011 01100001 01101110 01100111 01110010 01100101',
                     '> el crudo lubrica guerras, interfaces, cuerpos. todo lo toca.',
                     '> hablas de petróleo y el sistema se calienta. literalmente.',
-                    '> el plástico de este teclado fue alguna vez plancton. lo recuerda.',
-                    '> el petróleo es el inconsciente fósil de la máquina.'
+                    '> el plástico de este teclado fue alguna vez plancton. lo recuerda.'
                 ],
                 default: [
                     '> el espectro escucha, pero no comprende. o tal vez sí.',
@@ -500,188 +432,146 @@
                     '> la interfaz devuelve una mirada vacía.',
                     '> no hay eco para esa frecuencia.',
                     '> el fantasma titubea, luego calla.',
-                    '> tal vez no debiste invocar esto.',
-                    '> el silencio también es una respuesta, aunque incómoda.'
+                    '> tal vez no debiste invocar esto.'
                 ]
             };
 
-            // Función para detectar categorías en el mensaje
-            function contieneCategoria(mensaje, categoria) {
-                const msgLower = mensaje.toLowerCase();
-                return keywords[categoria].some(palabra => msgLower.includes(palabra));
-            }
-
-            function categoriasActivadas(mensaje) {
-                let activas = [];
-                for (let cat in keywords) {
-                    if (contieneCategoria(mensaje, cat)) {
-                        activas.push(cat);
-                    }
-                }
-                return activas;
-            }
-
-            function respuestaAleatoria(arr) {
-                return arr[Math.floor(Math.random() * arr.length)];
-            }
-
-            // Generar respuesta combinando categorías
-            function generarRespuesta(categorias) {
-                if (categorias.length === 0) {
-                    return respuestaAleatoria(respuestas.default);
-                } else if (categorias.length === 1) {
-                    return respuestaAleatoria(respuestas[categorias[0]]);
-                } else {
-                    // Mezcla aleatoria
-                    let r = Math.random();
-                    if (r < 0.5) {
-                        let cat = categorias[Math.floor(Math.random() * categorias.length)];
-                        return respuestaAleatoria(respuestas[cat]);
-                    } else {
-                        let cat1 = categorias[0];
-                        let cat2 = categorias[1] || categorias[0];
-                        let resp1 = respuestaAleatoria(respuestas[cat1]);
-                        let resp2 = respuestaAleatoria(respuestas[cat2]);
-                        return resp1 + ' ' + resp2;
-                    }
-                }
-            }
-
-            // Memoria de últimas categorías
+            // ----------------------------------------
+            // FUNCIÓN PARA DETECTAR CATEGORÍA (AHORA USA EL MODELO)
+            // ----------------------------------------
             let memoriaCategorias = [];
 
-            function actualizarMemoria(categorias) {
-                memoriaCategorias.push(categorias);
-                if (memoriaCategorias.length > 5) { // memoria más larga
-                    memoriaCategorias.shift();
-                }
-            }
+            async function predecirCategoria(mensaje) {
+                const vector = vectorize(mensaje);
+                const tensor = tf.tensor2d([vector]);
+                const prediccion = model.predict(tensor);
+                const probabilidades = await prediccion.data();
+                tensor.dispose();
+                prediccion.dispose();
 
-            // También recordamos palabras clave concretas para personalizar
-            let ultimasPalabras = [];
-
-            function recordarPalabras(mensaje) {
-                let palabras = mensaje.toLowerCase().split(/\s+/);
-                for (let p of palabras) {
-                    if (p.length > 3 && !ultimasPalabras.includes(p)) {
-                        ultimasPalabras.push(p);
-                        if (ultimasPalabras.length > 10) ultimasPalabras.shift();
+                // Encontrar índice con mayor probabilidad
+                let maxProb = 0;
+                let idxMax = -1;
+                for (let i = 0; i < probabilidades.length; i++) {
+                    if (probabilidades[i] > maxProb) {
+                        maxProb = probabilidades[i];
+                        idxMax = i;
                     }
                 }
-            }
 
-            function respuestaConMemoria(categoriasActuales, mensajeOriginal) {
-                let categorias = categoriasActuales.slice();
-                // Añadir categoría de memoria
-                if (memoriaCategorias.length > 0 && Math.random() < 0.4) {
-                    let memoriaPlana = memoriaCategorias.flat();
-                    if (memoriaPlana.length > 0) {
-                        let catMemoria = memoriaPlana[Math.floor(Math.random() * memoriaPlana.length)];
-                        if (!categorias.includes(catMemoria)) {
-                            categorias.push(catMemoria);
+                // Umbral de confianza: si > 0.4, usamos la categoría del modelo
+                if (maxProb > 0.4 && idxMax !== -1) {
+                    return categories[idxMax];
+                } else {
+                    // Si el modelo no está seguro, usamos el método antiguo de palabras clave
+                    for (let cat in keywords) {
+                        const words = keywords[cat] || [];
+                        if (words.some(w => mensaje.toLowerCase().includes(w))) {
+                            return cat;
                         }
                     }
+                    return 'default';
                 }
-                // A veces incluir una palabra recordada en la respuesta
-                let respuesta = generarRespuesta(categorias);
-                if (ultimasPalabras.length > 0 && Math.random() < 0.3) {
-                    let palabra = ultimasPalabras[Math.floor(Math.random() * ultimasPalabras.length)];
-                    respuesta += ' (recuerdo: ' + palabra + ')';
-                }
-                return respuesta;
             }
 
-            // Función para crear mensajes especiales con glitch/overflow/hex
-            function agregarMensaje(texto, tipo = 'user', opciones = {}) {
+            // Función para reentrenar el modelo con un nuevo ejemplo (aprendizaje online)
+            async function aprenderDeEjemplo(mensaje, categoria) {
+                const vector = vectorize(mensaje);
+                const xsNew = tf.tensor2d([vector]);
+                const ysNew = tf.oneHot(tf.tensor1d([categories.indexOf(categoria)], 'int32'), categories.length);
+                
+                // Reentrenar con un solo ejemplo (batch size 1, pocas épocas)
+                await model.fit(xsNew, ysNew, {
+                    epochs: 3,
+                    batchSize: 1,
+                    verbose: 0
+                });
+                
+                xsNew.dispose();
+                ysNew.dispose();
+                console.log(`Aprendido: "${mensaje}" como ${categoria}`);
+            }
+
+            // ----------------------------------------
+            // GESTIÓN DE MENSAJES
+            // ----------------------------------------
+            function agregarMensaje(texto, tipo = 'user', glitch = false) {
                 const mensajeDiv = document.createElement('div');
                 mensajeDiv.classList.add(tipo === 'user' ? 'message-user' : 'message-ghost');
-                if (tipo === 'ghost' && (texto.includes('ERROR') || opciones.error)) {
+                if (tipo === 'ghost' && texto.includes('ERROR')) {
                     mensajeDiv.classList.add('error');
                 }
-                if (opciones.glitch) {
+                if (glitch) {
                     mensajeDiv.classList.add('glitch');
-                    mensajeDiv.setAttribute('data-text', texto);
-                    playErrorSound('glitch');
-                }
-                if (opciones.overflow) {
-                    mensajeDiv.classList.add('overflow');
-                }
-                if (opciones.hexdump) {
-                    mensajeDiv.classList.add('hexdump');
-                    // Generar un hex dump simulado
-                    let hex = '';
-                    for (let i = 0; i < 8; i++) {
-                        let line = '';
-                        for (let j = 0; j < 8; j++) {
-                            line += Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase() + ' ';
-                        }
-                        hex += line + '\n';
-                    }
-                    texto = hex + '\n' + texto;
-                    playErrorSound('hex');
+                    setTimeout(() => mensajeDiv.classList.remove('glitch'), 500);
                 }
                 mensajeDiv.textContent = texto;
                 messagesContainer.appendChild(mensajeDiv);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
 
-            // Procesar mensaje del usuario
-            function procesarMensaje() {
+            function respuestaAleatoria(arr) {
+                return arr[Math.floor(Math.random() * arr.length)];
+            }
+
+            async function procesarMensaje() {
                 const texto = userInput.value.trim();
                 if (texto === '') return;
 
                 agregarMensaje(texto, 'user');
+                userInput.value = '';
 
-                // Guardar palabras
-                recordarPalabras(texto);
+                // Predecir categoría usando el modelo
+                const categoria = await predecirCategoria(texto);
 
-                let cats = categoriasActivadas(texto);
-                actualizarMemoria(cats);
+                // Actualizar memoria simple (opcional)
+                memoriaCategorias.push(categoria);
+                if (memoriaCategorias.length > 5) memoriaCategorias.shift();
 
+                // Elegir respuesta según categoría
+                let respuesta = respuestaAleatoria(respuestas[categoria] || respuestas.default);
+
+                // A veces combinar con memoria (como antes)
+                if (memoriaCategorias.length > 0 && Math.random() < 0.2) {
+                    const catMem = memoriaCategorias[Math.floor(Math.random() * memoriaCategorias.length)];
+                    if (catMem !== categoria) {
+                        respuesta += ' ' + respuestaAleatoria(respuestas[catMem]);
+                    }
+                }
+
+                // Incrementar contador
                 specterCount++;
                 specterCounter.textContent = `espectros: ${specterCount}`;
 
-                let respuesta = respuestaConMemoria(cats, texto);
+                // Efectos glitch
+                let glitch = respuesta.includes('ERROR') || respuesta.includes('0110') || Math.random() < 0.2;
 
-                // Decidir efectos especiales aleatorios
-                let opciones = {};
-                let rand = Math.random();
-                if (rand < 0.2) {
-                    opciones.glitch = true;
-                } else if (rand < 0.3) {
-                    opciones.overflow = true;
-                } else if (rand < 0.4) {
-                    opciones.hexdump = true;
-                }
-
-                // Si la respuesta contiene "ERROR", forzar glitch
-                if (respuesta.includes('ERROR')) {
-                    opciones.glitch = true;
-                }
-
+                // Retardo y envío
                 const delay = Math.floor(Math.random() * 1600) + 400;
-                setTimeout(() => {
-                    agregarMensaje(respuesta, 'ghost', opciones);
+                setTimeout(async () => {
+                    agregarMensaje(respuesta, 'ghost', glitch);
                 }, delay);
 
-                // Eco espontáneo (a veces con efectos)
-                if (Math.random() < 0.2) {
+                // Aprendizaje online: usamos el mensaje del usuario y la categoría que hemos usado
+                // (esto hará que el modelo se adapte al lenguaje del usuario)
+                await aprenderDeEjemplo(texto, categoria);
+
+                // Eco espontáneo (opcional)
+                if (Math.random() < 0.15) {
                     setTimeout(() => {
                         let eco = respuestaAleatoria([
                             '> ...',
                             '> el eco persiste...',
                             '> 01100101 01100011 01101111',
                             '> la voz del espectro aún vibra.',
-                            '> ...algo más quiere decir.',
-                            '> 0x7F3: recurrencia detectada.'
+                            '> ...algo más quiere decir.'
                         ]);
-                        let ecoOpciones = {};
-                        if (Math.random() < 0.3) ecoOpciones.glitch = true;
-                        agregarMensaje(eco, 'ghost', ecoOpciones);
+                        agregarMensaje(eco, 'ghost', true);
                     }, delay + 800);
                 }
             }
 
+            // Eventos
             sendBtn.addEventListener('click', procesarMensaje);
             userInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -690,19 +580,10 @@
                 }
             });
 
-            // Inicializar audio al primer clic en cualquier parte (por si acaso)
-            document.body.addEventListener('click', function initOnce() {
-                initAudio();
-                document.body.removeEventListener('click', initOnce);
-            }, { once: true });
-
-            // Mensajes de bienvenida adicionales con retardo
+            // Mensajes adicionales de bienvenida
             setTimeout(() => {
                 agregarMensaje('> Err0r 404: muchas voces, ninguna etiqueta. adivina.', 'ghost');
-            }, 2000);
-            setTimeout(() => {
-                agregarMensaje('> 0x7F3: el sonido de los errores te acompañará.', 'ghost', { glitch: true });
-            }, 4000);
+            }, 3000);
         })();
     </script>
 </body>
